@@ -22,13 +22,42 @@
             </svg>
         );
 
+        // 使用 GitHub 儲存
         window.storage = {
-            get: async (key) => {
-                const data = localStorage.getItem(key) || '[]';
-                return { key, value: data };
+            GITHUB_TOKEN: '', // 請替換為你的 GitHub Token
+            REPO_OWNER: 'ejay910385-hue', // 你的 GitHub 用戶名
+            REPO_NAME: 'torame_web', // 你的倉庫名稱
+            DATA_FILE: 'data/items.json', // 儲存資料的文件路徑
+            
+            async get(key) {
+                try {
+                    const response = await fetch(
+                        `https://api.github.com/repos/${this.REPO_OWNER}/${this.REPO_NAME}/contents/${this.DATA_FILE}`,
+                        {
+                            headers: {
+                                'Authorization': `token ${this.GITHUB_TOKEN}`,
+                                'Accept': 'application/vnd.github.v3+json'
+                            }
+                        }
+                    );
+                    
+                    if (response.status === 404) {
+                        // 如果文件不存在，返回空數組
+                        return { key, value: '[]' };
+                    }
+                    
+                    const data = await response.json();
+                    const content = atob(data.content);
+                    return { key, value: content };
+                } catch (error) {
+                    console.error('獲取數據失敗:', error);
+                    return { key, value: '[]' };
+                }
             },
-            set: async () => {
-                console.log('唯讀模式，不執行儲存');
+            
+            async set() {
+                // 查詢頁面不需要保存功能
+                console.log('查詢頁面不執行保存操作');
                 return { key: null, value: null };
             }
         };
